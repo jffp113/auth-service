@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"com.cross-join.crossviewer.authService/business/data/ent/role"
+	"com.cross-join.crossviewer.authservice/business/data/ent/role"
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 )

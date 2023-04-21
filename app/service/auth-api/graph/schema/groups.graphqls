@@ -1,0 +1,24 @@
+type Group {
+    id: Int!
+    name: String!
+    description: String!
+    email: String!
+    users: [User]
+}
+
+input GroupInput {
+    name: String
+    description: String
+    email: String
+}
+
+extend type Query {
+    groups: [Group] @authenticated
+    group(id: Int!): Group @authenticated
+}
+
+extend type Mutation {
+    createGroup(input: GroupInput): Group @authenticated
+    updateGroup(id: Int!, input: GroupInput!): Group @authenticated
+    deleteGroup(id: Int!): Group @authenticated
+}

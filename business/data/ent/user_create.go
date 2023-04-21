@@ -8,12 +8,12 @@ import (
 	"fmt"
 	"time"
 
-	"com.cross-join.crossviewer.authService/business/data/ent/claim"
-	"com.cross-join.crossviewer.authService/business/data/ent/group"
-	"com.cross-join.crossviewer.authService/business/data/ent/role"
-	"com.cross-join.crossviewer.authService/business/data/ent/user"
-	"com.cross-join.crossviewer.authService/business/data/ent/usersgroups"
-	"com.cross-join.crossviewer.authService/business/data/ent/usersroles"
+	"com.cross-join.crossviewer.authservice/business/data/ent/claim"
+	"com.cross-join.crossviewer.authservice/business/data/ent/group"
+	"com.cross-join.crossviewer.authservice/business/data/ent/role"
+	"com.cross-join.crossviewer.authservice/business/data/ent/user"
+	"com.cross-join.crossviewer.authservice/business/data/ent/usersgroups"
+	"com.cross-join.crossviewer.authservice/business/data/ent/usersroles"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 )

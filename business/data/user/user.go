@@ -1,8 +1,8 @@
 package user
 
 import (
-	"com.cross-join.crossviewer.authService/business/data"
-	"com.cross-join.crossviewer.authService/business/data/ent"
+	"com.cross-join.crossviewer.authservice/business/data"
+	"com.cross-join.crossviewer.authservice/business/data/ent"
 	"context"
 	"fmt"
 	"time"

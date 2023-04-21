@@ -1,0 +1,42 @@
+type User {
+    id: Int!
+    fullName: String!
+    username: String!
+    email: String!
+    preferences: JSON
+    roles: [Role]
+    groups: [Group]
+    claims: [Claim]
+}
+
+input UserInput {
+    fullName: String
+    username: String
+    email: String
+    password: String
+    preferences: JSON
+}
+
+input UserRolesInput {
+    roleIds: [Int!]!
+}
+
+input UserGroupsInput {
+    groupIds: [Int!]!
+}
+
+extend type Query {
+    me: User @authenticated
+    users: [User] @authenticated @hasRole(roles: "admin")
+    user(id: Int!): User @authenticated
+}
+
+extend type Mutation {
+    createUser(input: UserInput!): User @authenticated
+    updateUser(id: Int!, input: UserInput!): User @authenticated
+    deleteUser(id: Int!): User @authenticated
+    addUserToRoles(userId: Int!, input: UserRolesInput): User @authenticated
+    removeUserFromRoles(userId: Int!, input: UserRolesInput): User @authenticated
+    addUserToGroups(userId: Int!, input: UserGroupsInput): User @authenticated
+    removeUserFromGroups(userId: Int!, input: UserGroupsInput): User @authenticated
+}

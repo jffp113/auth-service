@@ -1,0 +1,15 @@
+directive @authenticated on FIELD_DEFINITION
+directive @hasRole(roles: String) on FIELD_DEFINITION
+
+scalar JSON
+scalar Date
+
+type Query {
+    e: Boolean
+}
+type Mutation {
+    e: Boolean
+}
+type Subscription {
+    e: Boolean
+}

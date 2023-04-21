@@ -1,0 +1,23 @@
+type Claim {
+  id: Int!
+  user: User!
+  service: String!
+  claims: JSON
+}
+
+input ClaimInput {
+  userId: Int
+  service: String
+  claims: JSON
+}
+
+extend type Query {
+  claims: [Claim] @authenticated
+  claim(id: Int!): Claim @authenticated
+}
+
+extend type Mutation {
+  createClaim(input: ClaimInput): Claim @authenticated
+  updateClaim(id: Int!, input: ClaimInput): Claim @authenticated
+  deleteClaim(id: Int!): Claim @authenticated
+}

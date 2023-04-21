@@ -1,7 +1,7 @@
 package data
 
 import (
-	"com.cross-join.crossviewer.authService/business/data/ent"
+	"com.cross-join.crossviewer.authservice/business/data/ent"
 	"context"
 	"fmt"
 	_ "github.com/lib/pq"

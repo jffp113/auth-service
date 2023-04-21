@@ -5,8 +5,8 @@ package ent
 import (
 	"context"
 
-	"com.cross-join.crossviewer.authService/business/data/ent/predicate"
-	"com.cross-join.crossviewer.authService/business/data/ent/usersroles"
+	"com.cross-join.crossviewer.authservice/business/data/ent/predicate"
+	"com.cross-join.crossviewer.authservice/business/data/ent/usersroles"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"

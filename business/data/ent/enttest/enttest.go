@@ -5,11 +5,11 @@ package enttest
 import (
 	"context"
 
-	"com.cross-join.crossviewer.authService/business/data/ent"
+	"com.cross-join.crossviewer.authservice/business/data/ent"
 	// required by schema hooks.
-	_ "com.cross-join.crossviewer.authService/business/data/ent/runtime"
+	_ "com.cross-join.crossviewer.authservice/business/data/ent/runtime"
 
-	"com.cross-join.crossviewer.authService/business/data/ent/migrate"
+	"com.cross-join.crossviewer.authservice/business/data/ent/migrate"
 	"entgo.io/ent/dialect/sql/schema"
 )
 

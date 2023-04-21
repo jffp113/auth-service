@@ -1,7 +1,7 @@
 package jtw
 
 import (
-	"com.cross-join.crossviewer.authService/foundation/keystore"
+	"com.cross-join.crossviewer.authservice/foundation/keystore"
 	"errors"
 	"fmt"
 	jwt "github.com/golang-jwt/jwt/v5"

@@ -2,7 +2,7 @@
 
 package runtime
 
-// The schema-stitching logic is generated in com.cross-join.crossviewer.authService/business/data/ent/runtime.go
+// The schema-stitching logic is generated in com.cross-join.crossviewer.authservice/business/data/ent/runtime.go
 
 const (
 	Version = "v0.12.1"                                         // Version of ent codegen.

@@ -6,7 +6,7 @@ import (
 	"context"
 	"fmt"
 
-	"com.cross-join.crossviewer.authService/business/data/ent"
+	"com.cross-join.crossviewer.authservice/business/data/ent"
 )
 
 // The ClaimFunc type is an adapter to allow the use of ordinary

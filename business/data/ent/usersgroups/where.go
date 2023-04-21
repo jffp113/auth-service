@@ -5,7 +5,7 @@ package usersgroups
 import (
 	"time"
 
-	"com.cross-join.crossviewer.authService/business/data/ent/predicate"
+	"com.cross-join.crossviewer.authservice/business/data/ent/predicate"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 )
