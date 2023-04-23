@@ -11,6 +11,7 @@ import (
 	"io"
 	"strconv"
 	"sync"
+	"sync/atomic"
 
 	"com.cross-join.crossviewer.authservice/app/service/auth-api/graph/model"
 	"github.com/99designs/gqlgen/graphql"
@@ -40,6 +41,7 @@ type ResolverRoot interface {
 	Mutation() MutationResolver
 	Query() QueryResolver
 	Subscription() SubscriptionResolver
+	User() UserResolver
 }
 
 type DirectiveRoot struct {
@@ -152,6 +154,11 @@ type QueryResolver interface {
 }
 type SubscriptionResolver interface {
 	E(ctx context.Context) (<-chan *bool, error)
+}
+type UserResolver interface {
+	Roles(ctx context.Context, obj *model.User) ([]*model.Role, error)
+	Groups(ctx context.Context, obj *model.User) ([]*model.Group, error)
+	Claims(ctx context.Context, obj *model.User) ([]*model.Claim, error)
 }
 
 type executableSchema struct {
@@ -4375,7 +4382,7 @@ func (ec *executionContext) _User_roles(ctx context.Context, field graphql.Colle
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Roles, nil
+		return ec.resolvers.User().Roles(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4393,8 +4400,8 @@ func (ec *executionContext) fieldContext_User_roles(ctx context.Context, field g
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
@@ -4426,7 +4433,7 @@ func (ec *executionContext) _User_groups(ctx context.Context, field graphql.Coll
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Groups, nil
+		return ec.resolvers.User().Groups(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4444,8 +4451,8 @@ func (ec *executionContext) fieldContext_User_groups(ctx context.Context, field 
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
@@ -4479,7 +4486,7 @@ func (ec *executionContext) _User_claims(ctx context.Context, field graphql.Coll
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Claims, nil
+		return ec.resolvers.User().Claims(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4497,8 +4504,8 @@ func (ec *executionContext) fieldContext_User_claims(ctx context.Context, field 
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
@@ -7091,45 +7098,84 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			out.Values[i] = ec._User_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "fullName":
 
 			out.Values[i] = ec._User_fullName(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "username":
 
 			out.Values[i] = ec._User_username(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "email":
 
 			out.Values[i] = ec._User_email(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "preferences":
 
 			out.Values[i] = ec._User_preferences(ctx, field, obj)
 
 		case "roles":
+			field := field
 
-			out.Values[i] = ec._User_roles(ctx, field, obj)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_roles(ctx, field, obj)
+				return res
+			}
 
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "groups":
+			field := field
 
-			out.Values[i] = ec._User_groups(ctx, field, obj)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_groups(ctx, field, obj)
+				return res
+			}
 
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "claims":
+			field := field
 
-			out.Values[i] = ec._User_claims(ctx, field, obj)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_claims(ctx, field, obj)
+				return res
+			}
 
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

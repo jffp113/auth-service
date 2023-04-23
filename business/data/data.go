@@ -1,10 +1,10 @@
 package data
 
 import (
-	"com.cross-join.crossviewer.authservice/business/data/ent"
 	"context"
 	"fmt"
-	_ "github.com/lib/pq"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 const DefaultDriverName = "postgres"
@@ -16,7 +16,8 @@ type Credentials struct {
 
 type Client struct {
 	ctx context.Context
-	*ent.Client
+
+	*gorm.DB
 
 	host   string
 	port   int
@@ -43,21 +44,19 @@ func New(ctx context.Context, confs ...Config) (Client, error) {
 }
 
 func startClient(cli *Client) error {
-	var opts []ent.Option
-
-	if cli.debug {
-		opts = append(opts, ent.Debug())
-	}
-
 	connStr := fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s sslmode=%s",
 		cli.host, cli.port, cli.credentials.username, cli.dbname, cli.credentials.password, "disable")
 
-	entCli, err := ent.Open(DefaultDriverName, connStr, opts...)
+	db, err := gorm.Open(postgres.Open(connStr), &gorm.Config{})
+
 	if err != nil {
 		return fmt.Errorf("openning connection to db: %w", err)
 	}
+	cli.DB = db
 
-	cli.Client = entCli
+	if cli.debug {
+		db.Debug()
+	}
 
 	return nil
 }
@@ -74,5 +73,6 @@ func applyConfigs(c *Client, confs []Config) error {
 }
 
 func (r Client) Close() error {
-	return r.Client.Close()
+	//return r.Client.Close()
+	return nil
 }

@@ -13,7 +13,13 @@ import (
 
 // CreateUser is the resolver for the createUser field.
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.UserInput) (*model.User, error) {
-	panic(fmt.Errorf("not implemented: CreateUser - createUser"))
+	u, err := r.Users.CreateUser(ctx, input)
+
+	if err != nil {
+		r.Log.Errorw("Creating User", "error", err, "input", input)
+	}
+
+	return u, err
 }
 
 // UpdateUser is the resolver for the updateUser field.
@@ -51,12 +57,32 @@ func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
 	panic(fmt.Errorf("not implemented: Me - me"))
 }
 
-// Users is the resolver for the users field.
+// Users is the resolver for the Users field.
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
-	panic(fmt.Errorf("not implemented: Users - users"))
+	panic(fmt.Errorf("not implemented: Users - Users"))
 }
 
 // User is the resolver for the user field.
 func (r *queryResolver) User(ctx context.Context, id int) (*model.User, error) {
 	panic(fmt.Errorf("not implemented: User - user"))
 }
+
+// Roles is the resolver for the roles field.
+func (r *userResolver) Roles(ctx context.Context, obj *model.User) ([]*model.Role, error) {
+	panic(fmt.Errorf("not implemented: Roles - roles"))
+}
+
+// Groups is the resolver for the groups field.
+func (r *userResolver) Groups(ctx context.Context, obj *model.User) ([]*model.Group, error) {
+	panic(fmt.Errorf("not implemented: Groups - groups"))
+}
+
+// Claims is the resolver for the claims field.
+func (r *userResolver) Claims(ctx context.Context, obj *model.User) ([]*model.Claim, error) {
+	panic(fmt.Errorf("not implemented: Claims - claims"))
+}
+
+// User returns UserResolver implementation.
+func (r *Resolver) User() UserResolver { return &userResolver{r} }
+
+type userResolver struct{ *Resolver }

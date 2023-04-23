@@ -2,10 +2,9 @@ package main
 
 import (
 	"com.cross-join.crossviewer.authservice/business/data"
-	"com.cross-join.crossviewer.authservice/business/data/user"
+	"com.cross-join.crossviewer.authservice/business/data/users"
 	"context"
 	"fmt"
-	"log"
 )
 
 func main() {
@@ -18,35 +17,19 @@ func main() {
 	)
 
 	if err != nil {
-		log.Fatalln(err)
+		panic(err)
 	}
 
-	user, err := user.GetById(ctx, cli, 1)
+	storer := users.New(cli)
 
-	if err != nil {
-		log.Fatalln(err)
-	}
+	u, err := storer.Create(ctx, users.NewUser{
+		FullName:    "Jorge",
+		Username:    "jff.pereira2",
+		Email:       "jff.pereira@hotmail.com",
+		Hash:        "qwerty",
+		Preferences: "{}",
+	})
 
-	roles, err := user.QueryRoles().All(ctx)
-
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	claims, err := user.QueryClaims().All(ctx)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	groups, err := user.QueryGroups().All(ctx)
-
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	fmt.Println(user)
-	fmt.Println(roles)
-	fmt.Println(claims)
-	fmt.Println(groups)
+	fmt.Println(u)
 
 }
