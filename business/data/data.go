@@ -3,8 +3,11 @@ package data
 import (
 	"context"
 	"fmt"
+	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+	"time"
 )
 
 const DefaultDriverName = "postgres"
@@ -24,6 +27,8 @@ type Client struct {
 	dbname string
 
 	credentials Credentials
+
+	log *zap.SugaredLogger
 
 	debug bool
 }
@@ -47,7 +52,9 @@ func startClient(cli *Client) error {
 	connStr := fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s sslmode=%s",
 		cli.host, cli.port, cli.credentials.username, cli.dbname, cli.credentials.password, "disable")
 
-	db, err := gorm.Open(postgres.Open(connStr), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(connStr), &gorm.Config{
+		Logger: createLogger(cli.log),
+	})
 
 	if err != nil {
 		return fmt.Errorf("openning connection to db: %w", err)
@@ -59,6 +66,18 @@ func startClient(cli *Client) error {
 	}
 
 	return nil
+}
+
+func createLogger(log *zap.SugaredLogger) logger.Interface {
+	if log == nil {
+		return nil
+	}
+
+	return logger.New(zap.NewStdLog(log.Desugar()), logger.Config{
+		SlowThreshold: time.Second,
+		LogLevel:      logger.Error,
+		Colorful:      false,
+	})
 }
 
 func applyConfigs(c *Client, confs []Config) error {

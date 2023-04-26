@@ -3,17 +3,12 @@ package main
 import (
 	"com.cross-join.crossviewer.authservice/app/service/auth-api/graph"
 	"com.cross-join.crossviewer.authservice/app/service/auth-api/handlers/debug"
-	usersCore "com.cross-join.crossviewer.authservice/business/core/users"
 	"com.cross-join.crossviewer.authservice/business/data"
-	"com.cross-join.crossviewer.authservice/business/data/users"
 	"com.cross-join.crossviewer.authservice/foundation/logger"
 	"context"
 	"errors"
 	"expvar"
 	"fmt"
-	"github.com/99designs/gqlgen/graphql"
-	"github.com/99designs/gqlgen/graphql/handler"
-	"github.com/99designs/gqlgen/graphql/playground"
 	conf "github.com/ardanlabs/conf/v3"
 	"go.uber.org/automaxprocs/maxprocs"
 	"go.uber.org/zap"
@@ -70,9 +65,9 @@ func run(log *zap.SugaredLogger) error {
 			Host         string `conf:"default:localhost"`
 			Port         int    `conf:"default:4438"`
 			Name         string `conf:"default:xviewer_meta"`
-			MaxIdleConns int    `conf:"default:2"`
-			MaxOpenConns int    `conf:"default:0"`
-			DisableTLS   bool   `conf:"default:true"`
+			MaxIdleConns int    `conf:"default:2"`    // TODO implement
+			MaxOpenConns int    `conf:"default:0"`    // TODO implement
+			DisableTLS   bool   `conf:"default:true"` // TODO implement
 		}
 	}{
 		Version: conf.Version{
@@ -114,19 +109,11 @@ func run(log *zap.SugaredLogger) error {
 		data.WithCredentials(cfg.DB.User, cfg.DB.Password),
 		data.WithHostAndPort(cfg.DB.Host, cfg.DB.Port),
 		data.WithDbName(cfg.DB.Name),
+		data.WithLogger(log),
 	)
 
 	if err != nil {
 		return fmt.Errorf("initializing BD: %w", err)
-	}
-
-	//////////////////////////User core init////////////////////////////
-	usersStore := users.New(dbCli)
-	users := usersCore.NewCore(log, &usersStore)
-
-	resolver := graph.Resolver{
-		Users: users,
-		Log:   log,
 	}
 
 	// =========================================================================
@@ -143,24 +130,14 @@ func run(log *zap.SugaredLogger) error {
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
-	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{
-		Resolvers: &resolver,
-		Directives: struct {
-			Authenticated func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
-			HasRole       func(ctx context.Context, obj interface{}, next graphql.Resolver, roles *string) (res interface{}, err error)
-		}{Authenticated: func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error) {
-			return next(ctx)
-		}},
-	}))
-
-	var mux http.ServeMux
-
-	mux.Handle("/playground", playground.Handler("GraphQL playground", "/query"))
-	mux.Handle("/query", srv)
+	mux := graph.Mux(&graph.MuxConfig{
+		DbCli: dbCli,
+		Log:   log,
+	})
 
 	api := http.Server{
 		Addr:         cfg.Web.APIHost,
-		Handler:      &mux,
+		Handler:      mux,
 		ReadTimeout:  cfg.Web.ReadTimeout,
 		WriteTimeout: cfg.Web.WriteTimeout,
 		IdleTimeout:  cfg.Web.IdleTimeout,

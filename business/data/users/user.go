@@ -2,18 +2,21 @@ package users
 
 import (
 	"com.cross-join.crossviewer.authservice/business/data"
+	"com.cross-join.crossviewer.authservice/business/data/schema"
 	"context"
 	"fmt"
 	"time"
 )
 
 type Storer interface {
-	Create(ctx context.Context, prd NewUser) (User, error)
+	Create(ctx context.Context, prd schema.NewUser) (schema.User, error)
+	Query(ctx context.Context) ([]schema.User, error)
+	QueryById(ctx context.Context, userId int) (schema.User, error)
+	QueryUserRoles(ctx context.Context, userId int) ([]schema.Role, error)
 	//Update(ctx context.Context, prd Product) error
 	//Delete(ctx context.Context, prd Product) error
 	//Query(ctx context.Context, filter QueryFilter, orderBy order.By, pageNumber int, rowsPerPage int) ([]Product, error)
 	//Count(ctx context.Context, filter QueryFilter) (int, error)
-	//QueryByID(ctx context.Context, productID uuid.UUID) (Product, error)
 	//QueryByUserID(ctx context.Context, userID uuid.UUID) ([]Product, error)
 }
 
@@ -28,9 +31,9 @@ func New(cli data.Client) Store {
 	}
 }
 
-func (s *Store) Create(ctx context.Context, nu NewUser) (User, error) {
+func (s *Store) Create(ctx context.Context, nu schema.NewUser) (schema.User, error) {
 	now := time.Now()
-	u := User{
+	u := schema.User{
 		Id:          0,
 		FullName:    nu.FullName,
 		Username:    nu.Username,
@@ -41,24 +44,55 @@ func (s *Store) Create(ctx context.Context, nu NewUser) (User, error) {
 		UpdatedAt:   now,
 	}
 
-	resp := s.cli.Create(&u)
+	resp := s.cli.WithContext(ctx).
+		Create(&u)
 
 	if resp.Error != nil {
-		return User{}, fmt.Errorf("adding user to database: %w", resp.Error)
+		return schema.User{}, fmt.Errorf("adding user to database: %w", resp.Error)
 	}
 
 	return u, nil
 }
 
-//func GetById(ctx context.Context, cli data.Client, id int) (*ent.User, error) {
-//	u, err := cli.User.Get(ctx, id)
-//
-//	if err != nil {
-//		return nil, fmt.Errorf("querying user by id=%v: %w", id, err)
-//	}
-//
-//	return u, nil
-//}
+func (s *Store) QueryById(ctx context.Context, id int) (schema.User, error) {
+	var u schema.User
+
+	resp := s.cli.WithContext(ctx).
+		First(&u, id)
+
+	if resp.Error != nil {
+		return schema.User{}, fmt.Errorf("querying user by id=%v: %w", id, resp.Error)
+	}
+
+	return u, nil
+}
+
+func (s *Store) Query(ctx context.Context) ([]schema.User, error) {
+	var us []schema.User
+
+	result := s.cli.WithContext(ctx).
+		Find(&us)
+
+	if result.Error != nil {
+		return nil, fmt.Errorf("querying users: %w", result.Error)
+	}
+
+	return us, nil
+}
+
+func (s *Store) QueryUserRoles(ctx context.Context, userId int) ([]schema.Role, error) {
+	var u schema.User
+
+	result := s.cli.WithContext(ctx).
+		Preload("Roles").
+		First(&u, userId)
+
+	if result.Error != nil {
+		return nil, fmt.Errorf("querying user(%v) roles: %w", userId, result.Error)
+	}
+
+	return u.Roles, nil
+}
 
 //func GetAll(ctx context.Context, cli data.Client) ([]*ent.User, error) {
 //	us, err := cli.User.Query().All(ctx)

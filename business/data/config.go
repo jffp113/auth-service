@@ -1,5 +1,7 @@
 package data
 
+import "go.uber.org/zap"
+
 const (
 	DefaultHost = "localhost:9080"
 )
@@ -35,6 +37,13 @@ func WithHostAndPort(host string, port int) Config {
 func WithDebug(debug bool) Config {
 	return func(client *Client) error {
 		client.debug = debug
+		return nil
+	}
+}
+
+func WithLogger(log *zap.SugaredLogger) Config {
+	return func(client *Client) error {
+		client.log = log
 		return nil
 	}
 }

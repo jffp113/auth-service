@@ -6,6 +6,7 @@ package graph
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"com.cross-join.crossviewer.authservice/app/service/auth-api/graph/model"
@@ -13,10 +14,11 @@ import (
 
 // CreateUser is the resolver for the createUser field.
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.UserInput) (*model.User, error) {
-	u, err := r.Users.CreateUser(ctx, input)
+	u, err := r.UsersCore.CreateUser(ctx, input)
 
 	if err != nil {
 		r.Log.Errorw("Creating User", "error", err, "input", input)
+		return nil, errors.New("could not create user")
 	}
 
 	return u, err
@@ -59,17 +61,38 @@ func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
 
 // Users is the resolver for the Users field.
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
-	panic(fmt.Errorf("not implemented: Users - Users"))
+	us, err := r.UsersCore.AllUsers(ctx)
+
+	if err != nil {
+		r.Log.Errorw("graphql: users", "error", err)
+		return nil, errors.New("could not fetch users")
+	}
+
+	return us, nil
 }
 
 // User is the resolver for the user field.
 func (r *queryResolver) User(ctx context.Context, id int) (*model.User, error) {
-	panic(fmt.Errorf("not implemented: User - user"))
+	us, err := r.UsersCore.UsersById(ctx, id)
+
+	if err != nil {
+		r.Log.Errorw("graphql: user", "error", err)
+		return nil, errors.New("could not fetch user")
+	}
+
+	return us, nil
 }
 
 // Roles is the resolver for the roles field.
 func (r *userResolver) Roles(ctx context.Context, obj *model.User) ([]*model.Role, error) {
-	panic(fmt.Errorf("not implemented: Roles - roles"))
+	rs, err := r.UsersCore.UserRoles(ctx, obj.ID)
+
+	if err != nil {
+		r.Log.Errorw("graphql: user: roles", "error", err)
+		return nil, errors.New("could not fetch user roles")
+	}
+
+	return rs, nil
 }
 
 // Groups is the resolver for the groups field.
