@@ -10,7 +10,7 @@ require (
 	github.com/graph-gophers/dataloader v5.0.0+incompatible
 	github.com/vektah/gqlparser/v2 v2.5.1
 	go.opentelemetry.io/otel v1.15.1
-	go.opentelemetry.io/otel/exporters/jaeger v1.15.1
+	go.opentelemetry.io/otel/exporters/zipkin v1.15.1
 	go.opentelemetry.io/otel/sdk v1.15.1
 	go.opentelemetry.io/otel/trace v1.15.1
 	go.uber.org/automaxprocs v1.5.2
@@ -34,7 +34,7 @@ require (
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
-	github.com/rogpeppe/go-internal v1.9.0 // indirect
+	github.com/openzipkin/zipkin-go v0.4.1 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/urfave/cli/v2 v2.24.4 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
@@ -46,6 +46,5 @@ require (
 	golang.org/x/sys v0.7.0 // indirect
 	golang.org/x/text v0.8.0 // indirect
 	golang.org/x/tools v0.6.1-0.20230222164832-25d2519c8696 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

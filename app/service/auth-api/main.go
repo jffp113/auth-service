@@ -12,7 +12,7 @@ import (
 	conf "github.com/ardanlabs/conf/v3"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/exporters/jaeger"
+	"go.opentelemetry.io/otel/exporters/zipkin"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
@@ -76,7 +76,7 @@ func run(log *zap.SugaredLogger) error {
 			DisableTLS   bool   `conf:"default:true"` // TODO implement
 		}
 		Otel struct {
-			ReporterURI string  `conf:"default:otel"`
+			ReporterURI string  `conf:"default:http://otel:9411/api/v2/spans"`
 			ServiceName string  `conf:"default:auth-api"`
 			Probability float64 `conf:"default:1"`
 		}
@@ -136,6 +136,7 @@ func run(log *zap.SugaredLogger) error {
 		cfg.Otel.ServiceName,
 		cfg.Otel.ReporterURI,
 		cfg.Otel.Probability,
+		log.Desugar(),
 	)
 	if err != nil {
 		return fmt.Errorf("starting tracing: %w", err)
@@ -205,16 +206,21 @@ func run(log *zap.SugaredLogger) error {
 }
 
 // startTracing configure open telemetry to be used with zipkin.
-func startTracing(serviceName string, reporterURI string, probability float64) (*trace.TracerProvider, error) {
+func startTracing(serviceName string, reporterURI string, probability float64, log *zap.Logger) (*trace.TracerProvider, error) {
 
 	// WARNING: The current settings are using defaults which may not be
 	// compatible with your project. Please review the documentation for
 	// opentelemetry.
-	exporter, err := jaeger.New(
-		jaeger.WithAgentEndpoint(
-			jaeger.WithAgentHost(reporterURI),
-		),
+	//exporter, err := jaeger.New(
+	//	jaeger.WithAgentEndpoint(
+	//		jaeger.WithAgentHost(reporterURI),
+	//	),
+	//)
+	exporter, err := zipkin.New(
+		reporterURI,
+		zipkin.WithLogger(zap.NewStdLog(log)),
 	)
+
 	if err != nil {
 		return nil, fmt.Errorf("creating new exporter: %w", err)
 	}
