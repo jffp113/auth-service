@@ -1,14 +1,17 @@
 package v1
 
 import (
+	"com.cross-join.crossviewer.authservice/app/service/auth-api/handlers/v1/login"
 	"com.cross-join.crossviewer.authservice/business/data"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"net/http"
 )
 
 type Config struct {
-	log *zap.SugaredLogger
-	db  data.Client
+	Log    *zap.SugaredLogger
+	Db     data.Client
+	Tracer trace.Tracer
 }
 
 // Mux registers all the api  routes and then custom.
@@ -17,6 +20,12 @@ type Config struct {
 // a dependency could inject a handler into our service without us knowing it.
 func Mux(cfg Config) http.Handler {
 	mux := http.NewServeMux()
+
+	login.Register(mux, login.Config{
+		Db:     cfg.Db,
+		Log:    cfg.Log,
+		Tracer: cfg.Tracer,
+	})
 
 	return mux
 }

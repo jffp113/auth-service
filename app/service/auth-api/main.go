@@ -1,8 +1,8 @@
 package main
 
 import (
-	"com.cross-join.crossviewer.authservice/app/service/auth-api/graph"
 	"com.cross-join.crossviewer.authservice/app/service/auth-api/handlers/debug"
+	v1 "com.cross-join.crossviewer.authservice/app/service/auth-api/handlers/v1"
 	"com.cross-join.crossviewer.authservice/business/data"
 	"com.cross-join.crossviewer.authservice/foundation/logger"
 	"context"
@@ -10,6 +10,12 @@ import (
 	"expvar"
 	"fmt"
 	conf "github.com/ardanlabs/conf/v3"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/exporters/jaeger"
+	"go.opentelemetry.io/otel/sdk/resource"
+	"go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 	"go.uber.org/automaxprocs/maxprocs"
 	"go.uber.org/zap"
 	"net/http"
@@ -60,14 +66,19 @@ func run(log *zap.SugaredLogger) error {
 			ActiveKID  string `conf:"default:54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"`
 		}
 		DB struct {
-			User         string `conf:"default:xviewer"`
-			Password     string `conf:"default:xviewer,mask"`
-			Host         string `conf:"default:localhost"`
-			Port         int    `conf:"default:4438"`
-			Name         string `conf:"default:xviewer_meta"`
+			User         string `conf:"default:postgres"`
+			Password     string `conf:"default:postgres,mask"`
+			Host         string `conf:"default:db"`
+			Port         int    `conf:"default:5432"`
+			Name         string `conf:"default:postgres"`
 			MaxIdleConns int    `conf:"default:2"`    // TODO implement
 			MaxOpenConns int    `conf:"default:0"`    // TODO implement
 			DisableTLS   bool   `conf:"default:true"` // TODO implement
+		}
+		Otel struct {
+			ReporterURI string  `conf:"default:otel"`
+			ServiceName string  `conf:"default:auth-api"`
+			Probability float64 `conf:"default:1"`
 		}
 	}{
 		Version: conf.Version{
@@ -117,6 +128,23 @@ func run(log *zap.SugaredLogger) error {
 	}
 
 	// =========================================================================
+	// Start Tracing Support
+
+	log.Infow("startup", "status", "initializing OT/Otel tracing support")
+
+	traceProvider, err := startTracing(
+		cfg.Otel.ServiceName,
+		cfg.Otel.ReporterURI,
+		cfg.Otel.Probability,
+	)
+	if err != nil {
+		return fmt.Errorf("starting tracing: %w", err)
+	}
+	defer traceProvider.Shutdown(context.Background())
+
+	tracer := traceProvider.Tracer("service")
+
+	// =========================================================================
 	// Start Debug Service
 
 	log.Infow("startup", "status", "initializing debug endpoints", "host", cfg.Web.DebugHost)
@@ -130,9 +158,16 @@ func run(log *zap.SugaredLogger) error {
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
-	mux := graph.Mux(&graph.MuxConfig{
-		DbCli: dbCli,
-		Log:   log,
+	//mux := graph.Mux(&graph.MuxConfig{
+	//	DbCli: dbCli,
+	//	Log:   log,
+	//})
+	//
+
+	mux := v1.Mux(v1.Config{
+		Log:    log,
+		Db:     dbCli,
+		Tracer: tracer,
 	})
 
 	api := http.Server{
@@ -167,4 +202,43 @@ func run(log *zap.SugaredLogger) error {
 	}
 
 	return nil
+}
+
+// startTracing configure open telemetry to be used with zipkin.
+func startTracing(serviceName string, reporterURI string, probability float64) (*trace.TracerProvider, error) {
+
+	// WARNING: The current settings are using defaults which may not be
+	// compatible with your project. Please review the documentation for
+	// opentelemetry.
+	exporter, err := jaeger.New(
+		jaeger.WithAgentEndpoint(
+			jaeger.WithAgentHost(reporterURI),
+		),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("creating new exporter: %w", err)
+	}
+
+	traceProvider := trace.NewTracerProvider(
+		trace.WithSampler(trace.TraceIDRatioBased(probability)),
+		trace.WithBatcher(exporter,
+			trace.WithMaxExportBatchSize(trace.DefaultMaxExportBatchSize),
+			trace.WithBatchTimeout(trace.DefaultScheduleDelay*time.Millisecond),
+			trace.WithMaxExportBatchSize(trace.DefaultMaxExportBatchSize),
+		),
+		trace.WithResource(
+			resource.NewWithAttributes(
+				semconv.SchemaURL,
+				semconv.ServiceNameKey.String(serviceName),
+				attribute.String("exporter", "zipkin"),
+			),
+		),
+	)
+
+	// We must set this provider as the global provider for things to work,
+	// but we pass this provider around the program where needed to collect
+	// our traces.
+	otel.SetTracerProvider(traceProvider)
+
+	return traceProvider, nil
 }

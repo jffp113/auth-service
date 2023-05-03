@@ -67,6 +67,21 @@ func (s *Store) QueryById(ctx context.Context, id int) (schema.User, error) {
 	return u, nil
 }
 
+func (s *Store) QueryByUsername(ctx context.Context, username string) (schema.User, error) {
+	var u schema.User
+	u.Username = username
+
+	resp := s.cli.WithContext(ctx).
+		Where(&u).
+		First(&u)
+
+	if resp.Error != nil {
+		return schema.User{}, fmt.Errorf("querying user by username=%v: %w", username, resp.Error)
+	}
+
+	return u, nil
+}
+
 func (s *Store) Query(ctx context.Context) ([]schema.User, error) {
 	var us []schema.User
 
