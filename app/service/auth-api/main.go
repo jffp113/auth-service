@@ -12,7 +12,8 @@ import (
 	conf "github.com/ardanlabs/conf/v3"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/exporters/zipkin"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
@@ -76,7 +77,7 @@ func run(log *zap.SugaredLogger) error {
 			DisableTLS   bool   `conf:"default:true"` // TODO implement
 		}
 		Otel struct {
-			ReporterURI string  `conf:"default:http://otel:9411/api/v2/spans"`
+			ReporterURI string  `conf:"default:http://otels:9411/api/v2/spans"`
 			ServiceName string  `conf:"default:auth-api"`
 			Probability float64 `conf:"default:1"`
 		}
@@ -216,10 +217,21 @@ func startTracing(serviceName string, reporterURI string, probability float64, l
 	//		jaeger.WithAgentHost(reporterURI),
 	//	),
 	//)
-	exporter, err := zipkin.New(
-		reporterURI,
-		zipkin.WithLogger(zap.NewStdLog(log)),
+	//exporter, err := zipkin.New(
+	//	reporterURI,
+	//	zipkin.WithLogger(zap.NewStdLog(log)),
+	//)
+
+	var headers = map[string]string{
+		"lightstep-access-token": "VXOAg9HawgJ5rbElaW3ncdKH+2zHwFnIVvg1OAlHvADh8z+t3fr0GB6OBZujjtVlrm2k2DvNO9OaSq7Q2xU4AEqcG2Gr+GrvtkBK9G+J",
+	}
+
+	client := otlptracegrpc.NewClient(
+		otlptracegrpc.WithHeaders(headers),
+		otlptracegrpc.WithEndpoint(reporterURI),
 	)
+
+	exporter, err := otlptrace.New(context.Background(), client)
 
 	if err != nil {
 		return nil, fmt.Errorf("creating new exporter: %w", err)
