@@ -223,7 +223,7 @@ func startTracing(serviceName string, reporterURI string, probability float64, l
 	//)
 
 	var headers = map[string]string{
-		"lightstep-access-token": "VXOAg9HawgJ5rbElaW3ncdKH+2zHwFnIVvg1OAlHvADh8z+t3fr0GB6OBZujjtVlrm2k2DvNO9OaSq7Q2xU4AEqcG2Gr+GrvtkBK9G+J",
+		"Authorization": "Bearer UglZ00HicQI1uQD2eY",
 	}
 
 	client := otlptracegrpc.NewClient(
