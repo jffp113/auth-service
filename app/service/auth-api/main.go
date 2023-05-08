@@ -77,7 +77,7 @@ func run(log *zap.SugaredLogger) error {
 			DisableTLS   bool   `conf:"default:true"` // TODO implement
 		}
 		Otel struct {
-			ReporterURI string  `conf:"default:http://otels:9411/api/v2/spans"`
+			ReporterURI string  `conf:"default:otel:4317"`
 			ServiceName string  `conf:"default:auth-api"`
 			Probability float64 `conf:"default:1"`
 		}
@@ -229,6 +229,7 @@ func startTracing(serviceName string, reporterURI string, probability float64, l
 	client := otlptracegrpc.NewClient(
 		otlptracegrpc.WithHeaders(headers),
 		otlptracegrpc.WithEndpoint(reporterURI),
+		otlptracegrpc.WithInsecure(),
 	)
 
 	exporter, err := otlptrace.New(context.Background(), client)

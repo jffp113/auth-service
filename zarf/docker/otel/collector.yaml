@@ -1,0 +1,28 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+      http:
+
+processors:
+  batch:
+
+exporters:
+  datadog:
+    api:
+      site: datadoghq.eu
+      key: 372067bc5caf6b174fa5c7b0623a025f
+
+extensions:
+
+service:
+  extensions: []
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [datadog]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [datadog]

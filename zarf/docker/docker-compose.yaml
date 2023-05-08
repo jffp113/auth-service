@@ -20,6 +20,17 @@ services:
     environment:
       POSTGRES_PASSWORD: "postgres"
   otel:
-    image: openzipkin/zipkin:latest
+    image: otel:latest
+    build:
+      context: ./otel
     ports:
-      - "9411:9411"
+      - "4317:4317"
+      - "4318:4318"
+#    volumes:
+#      - type: bind
+#        source: ./zarf/docker/otel/collector.yaml
+#        target: /collector.yaml
+#    entrypoint:
+#
+##      - "/otelcol-contrib"
+##      - "--config=/collector.yaml"
