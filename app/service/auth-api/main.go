@@ -77,7 +77,7 @@ func run(log *zap.SugaredLogger) error {
 			DisableTLS   bool   `conf:"default:true"` // TODO implement
 		}
 		Otel struct {
-			ReporterURI string  `conf:"default:otel:4317"`
+			ReporterURI string  `conf:"default:https://otlp.nr-data.net:4317"`
 			ServiceName string  `conf:"default:auth-api"`
 			Probability float64 `conf:"default:1"`
 		}
@@ -209,21 +209,8 @@ func run(log *zap.SugaredLogger) error {
 // startTracing configure open telemetry to be used with zipkin.
 func startTracing(serviceName string, reporterURI string, probability float64, log *zap.Logger) (*trace.TracerProvider, error) {
 
-	// WARNING: The current settings are using defaults which may not be
-	// compatible with your project. Please review the documentation for
-	// opentelemetry.
-	//exporter, err := jaeger.New(
-	//	jaeger.WithAgentEndpoint(
-	//		jaeger.WithAgentHost(reporterURI),
-	//	),
-	//)
-	//exporter, err := zipkin.New(
-	//	reporterURI,
-	//	zipkin.WithLogger(zap.NewStdLog(log)),
-	//)
-
 	var headers = map[string]string{
-		"Authorization": "Bearer UglZ00HicQI1uQD2eY",
+		"api-key": "<your_license_key>",
 	}
 
 	client := otlptracegrpc.NewClient(
